@@ -1,24 +1,31 @@
 var express = require('express');
 var morgan = require('morgan');
-var app = express();
 var bodyParser = require('body-parser');
-var topics = require('./routes/topics');
-var config= require('./config');
+var mongoose = require('mongoose');
+var config = require('./config');
+
+mongoose.connect(config.db);
+
+var app = express();
 
 app.use(morgan('dev'));
-var topics = require('./routes/topics');
 
-///after app declaration
+// retrieve POST data
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+//ROUTES
+var topics = require('./routes/topics');
 app.use('/api/topics', topics);
 
+//404
 app.use(function(req, res, next) {
     var err = new Error('Resource not found');
     err.status = 404;
     next(err);
 });
-
 app.use(function(err, req, res, next) {
-    //console.error("["+(err.status || 500)+"] "+(new Date()).toString()+" "+req.url +' '+ err);
+    console.error("["+(err.status || 500)+"] "+(new Date()).toString()+" "+req.url +' '+ err);
     var message = err.status == 404 ? err.message : "Unknown error";
     res.status(err.status || 500).json({
         status: err.status || 500,
